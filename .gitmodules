@@ -1,0 +1,6 @@
+[submodule "reXscript"]
+	path = reXscript
+	url = http://www.xiaokang00010.top:4001/xiaokang00010/reXscript
+[submodule "rexStdlib"]
+	path = rexStdlib
+	url = http://www.xiaokang00010.top:4001/xiaokang00010/rexStdlib
