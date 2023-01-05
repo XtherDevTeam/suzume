@@ -1,0 +1,8 @@
+{
+    "name": "suzume",
+    "description": "Suzume (reXscript Package Manager)",
+    "version": "0.1",
+    "dependencies": {
+        "std": "0.1"
+    }
+}
