@@ -36,3 +36,7 @@ dist_prod: clean cmake_rex_prod build_rex_prod build_stdlib_prod
 	cp reXscript/cmake-build-release/rex dist/
 	cp -r rexStdlib/dist/* dist/modules/std/
 	cp -r suzume/* dist/modules/suzume/
+
+update_upstream:
+	cd reXscript; git pull origin master; cd ..
+	cd rexStdlib; git pull origin master; cd ..
