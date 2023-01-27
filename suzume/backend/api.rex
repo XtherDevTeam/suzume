@@ -15,14 +15,14 @@ func packageManager(args) {
             this.suzumeDB.executeScript(
                 '
                 create table suzumeInfo (
-                    suzumeVersion   string  not null default "0.1",
-                    suzumeBranch    string  not null default "dev",
-                    suzumeRemote    string  not null default "",
+                    suzumeVersion   text    not null default "0.1",
+                    suzumeBranch    text    not null default "dev",
+                    suzumeRemote    text    not null default "",
                     suzumeApiVer    integer not null default 1
                 );
                 create table installedPackages (
-                    name            string  not null,
-                    version         string  not null,
+                    name            text    not null,
+                    version         text    not null,
                     ref             integer not null default 1
                 );
                 '
@@ -66,8 +66,8 @@ func packageManager(args) {
                 end asc
                 "
             , pkgName, pkgVersion);
-            if (result.length()) {
-                if (result[0].version == pkgVersion) {
+            if (result.length() > 0) {
+                if (result[0].version.decode("utf-8") == pkgVersion) {
                     return 1;
                 } else {
                     return 0;
@@ -81,15 +81,15 @@ func packageManager(args) {
             return null;
         },
         install: func (pkgPath) {
-            let pkgFp = std.fs.open(format("${str}/suzume.json", pkgPath));
+            let pkgFp = std.fs.open(format("${str}/suzume.json", pkgPath), "r+");
             let pkgFile = std.json.loads(pkgFp.read(pkgFp.length).decode("utf-8"));
             pkgFp.close();
-            if (query(pkgFile.name, pkgFile.version).length() == 1) {
+            if (this.query(pkgFile.name, pkgFile.version) == 1) {
                 log.log(log.logLevel.info, format("Already installed: ${str}@${str}", pkgFile.name, pkgFile.version));
             }
             log.log(log.logLevel.info, format("Installing package ${str}@${str}...", pkgFile.name, pkgFile.version));
             log.log(log.logLevel.info, "Checking dependencies...");
-            objectIterate(pkgFile.dependencies, lambda () -> (k, v) {
+            object.iterate(pkgFile.dependencies, lambda () -> (k, v) {
                 let queryResult = query(k, v);
                 if (queryResult == 0) {
                     throw {"errName": "suzumeError", "errMsg": format("Unsatisfied package dependencies: required ${str} version ${str}, but an different version have been installed.", k, v)};
@@ -104,6 +104,16 @@ func packageManager(args) {
             std.fs.copy(pkgPath, format("${str}/modules/${str}@${str}", this.pmRoot, pkgFile.name, pkgFile.version));
             log.log(log.logLevel.info, "Updating registry...");
             this.updateInstalledPackages(pkgFile.name, pkgFile.version);
+            if (this.type == 1) {
+                log.log(log.logLevel.info, "Updating suzume.json...");
+                let fp = std.fs.open(format("${str}/suzume.json", this.pmRoot), "r+");
+                let file = std.json.loads(fp.read(fp.length).decode("utf-8"));
+                fp.close();
+                object.addAttr(file.dependencies, pkgFile.name, pkgFile.version);
+                let fp = std.fs.open(format("${str}/suzume.json", this.pmRoot), "w+");                
+                fp.write(std.json.dumps(file).encode("utf-8"));
+                fp.close();
+            }
             log.log(log.logLevel.info, "Complete...");
         },
         switchVersion: func (pkgName, pkgVersion) {
@@ -114,19 +124,33 @@ func packageManager(args) {
                 log.log(log.logLevel.error, "Already installed: ${pkgName}@${pkgVersion}", pkgName, pkgVersion);
             } else {
                 this.remove(pkgName, pkgVersion);
-                // TODO: Add support for network querying
+                this.installFromRemote(pkgName, pkgVersion);
             }
         },
         remove: func (pkgName, pkgVersion) {
             // remove packages
             let refNum = this.getRefNum(pkgName, pkgVersion);
             if (refNum == 1) {
-                std.fs.removeAll(format("${str}/${str}@${str}", this.pmRoot, pkgName, pkgVersion));
+                log.log(log.logLevel.debug, format("Removing: ${str}@${str}", pkgName, pkgVersion));
+                std.fs.removeAll(format("${str}/modules/${str}@${str}", this.pmRoot, pkgName, pkgVersion));
+                this.suzumeDB.execute("delete from installedPackages where name = ? and version = ?", pkgName, pkgVersion);
+                if (this.type == 1) {
+                    log.log(log.logLevel.info, "Updating suzume.json...");
+                    let fp = std.fs.open(format("${str}/suzume.json", this.pmRoot), "r+");
+                    let file = std.json.loads(fp.read(fp.length).decode("utf-8"));
+                    fp.close();
+                    object.removeAttr(file.dependencies, pkgFile.name);
+                    let fp = std.fs.open(format("${str}/suzume.json", this.pmRoot), "w+");                
+                    fp.write(std.json.dumps(file).encode("utf-8"));
+                    fp.close();
+                }
+                log.log(log.logLevel.debug, "Done");
+                return true;
             } else if (refNum == 0) {
-                log.log(log.logLevel.error, "Package not exist: ${pkgName}@${pkgVersion}", pkgName, pkgVersion);
+                log.log(log.logLevel.error, format("Package not exist: ${str}@${str}", pkgName, pkgVersion));
                 return false;
             } else {
-                log.log(log.logLevel.error, "Package has been referenced by other packages: ${pkgName}@${pkgVersion}", pkgName, pkgVersion);
+                log.log(log.logLevel.error, format("Package has been referenced by other packages: ${str}@${str}", pkgName, pkgVersion));
                 return false;
             }
         },
@@ -149,25 +173,29 @@ func packageManager(args) {
             return null;
         },
         installFromRemote: func(pkgName, pkgVersion) {
+            if (this.query(pkgName, pkgVersion) == 1) {
+                log.log(log.logLevel.info, format("Already installed: ${str}@${str}", pkgName, pkgVersion));
+                return false;
+            }
             let downloadedPath = this.remoteAPI.download(pkgName, pkgVersion, std.fs.temp());
             if (type(downloadedPath) != "null") {
                 let dirPath = format("${str}/${str}@${str}", std.fs.temp(), pkgName, pkgVersion);
                 std.fs.mkdirs(dirPath);
 
                 // extract and install
-                zip.extract(downloadedPath, std.fs.temp(), lambda () -> (filename) {
+                std.zip.extract(downloadedPath, dirPath, lambda () -> (filename) {
                     log.log(log.logLevel.debug, format("Extracting ${str}...", filename));
                     return null;
                 });
                 this.install(dirPath);
 
-                log.log(log.logLevel.debug, format("Cleaning temp files...", filename));
+                log.log(log.logLevel.debug, "Cleaning temp files...");
                 std.fs.removeAll(dirPath);
                 std.fs.removeAll(downloadedPath);
                 log.log(log.logLevel.debug, "Done!");
                 return true;
             } else {
-                log.log(log.logLevel.debug, "Package not exist on remote: ${pkgName}@${pkgVersion}", pkgName, pkgVersion);
+                log.log(log.logLevel.debug, format("Package not exist on remote: ${str}@${str}", pkgName, pkgVersion));
                 return false;
             }
         }
