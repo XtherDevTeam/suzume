@@ -56,8 +56,11 @@ jobs:
       - name: Configure upstream
         run: git submodule init; git submodule update; git submodule sync; cd rexStdlib; git submodule init; git submodule update; git submodule sync; cd ..
 
+      - name: Configure OpenSSL modules
+        run: brew install openssl
+
       - name: Build
-        run: make dist_prod
+        run: OPENSSL_ROOT_DIR=`brew --prefix openssl` make dist_prod
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v3.1.0
