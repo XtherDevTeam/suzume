@@ -1,0 +1,66 @@
+name: Compile & Upload
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure upstream
+        run: git submodule init; git submodule update; git submodule sync; cd rexStdlib; git submodule init; git submodule update; git submodule sync; cd ..
+
+      - name: Build
+        run: make dist_prod
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: macos-amd64-build
+          path: ${{github.workspace}}/dist
+
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure upstream
+        run: git submodule init; git submodule update; git submodule sync; cd rexStdlib; git submodule init; git submodule update; git submodule sync; cd ..
+
+      - name: Build
+        run: make dist_prod
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: macos-amd64-build
+          path: ${{github.workspace}}/dist
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure upstream
+        run: git submodule init; git submodule update; git submodule sync; cd rexStdlib; git submodule init; git submodule update; git submodule sync; cd ..
+
+      - name: Build
+        run: make dist_prod
+
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: macos-amd64-build
+          path: ${{github.workspace}}/dist
