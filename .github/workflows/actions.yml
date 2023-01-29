@@ -45,7 +45,7 @@ jobs:
         run: make dist_prod
 
       - name: Make stdlib works
-        run: cp dist/modules/std/libssl* dist/modules.std/libcrypto* dist/
+        run: cp dist/modules/std/libssl* dist/; cp dist/modules/std/libcrypto* dist/
 
       - name: Upload a Build Artifact
         uses: actions/upload-artifact@v3.1.0
