@@ -89,12 +89,12 @@ func packageManager(args) {
             }
             log.log(log.logLevel.info, format("Installing package ${str}@${str}...", pkgFile.name, pkgFile.version));
             log.log(log.logLevel.info, "Checking dependencies...");
-            object.iterate(pkgFile.dependencies, lambda () -> (k, v) {
-                let queryResult = query(k, v);
+            object.iterate(pkgFile.dependencies, lambda (this) -> (k, v) {
+                let queryResult = outer.this.query(k, v);
                 if (queryResult == 0) {
                     throw {"errName": "suzumeError", "errMsg": format("Unsatisfied package dependencies: required ${str} version ${str}, but an different version have been installed.", k, v)};
                 } else if (queryResult == 2) {
-                    if (this.installFromRemote(k, v) == false) {
+                    if (outer.this.installFromRemote(k, v) == false) {
                         throw {"errName": "suzumeError", "errMsg": format("Unsatisfied package dependencies: required ${str} version ${str}, but package not installed.", k, v)};
                     }
                 }
