@@ -4,6 +4,7 @@ cd $TMPDIR
 echo "Cloning repository"
 git clone https://github.com/XtherDevTeam/suzume.git
 cd suzume
+git submodule init; git submodule update; git submodule sync; cd rexStdlib; git submodule init; git submodule update; git submodule sync; cd ..
 echo "Building project...Make sure you've installed brew"
 brew install openssl
 make dist_prod
