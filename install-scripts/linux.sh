@@ -1,6 +1,6 @@
 echo "reXscript installer (Linux)"
 echo "Installer will install reXscript to ~/.rex automatically..."
-cd /temp
+cd /tmp
 echo "Cloning repository"
 git clone https://github.com/XtherDevTeam/suzume.git
 cd suzume
@@ -8,12 +8,12 @@ git submodule init; git submodule update; git submodule sync; cd rexStdlib; git 
 echo "Building project...Make sure you've installed openssl via the package manager on your machine"
 make dist_prod
 mkdir -p ~/.rex
-cp -r dist_prod/* ~/.rex/
+cp -r dist/* ~/.rex/
 echo "Adding reXscript to PATH..."
 echo "export PATH=~/.rex:\$PATH" >> ~/.bashrc
 echo "If installer can't add reXscript to PATH, please execute the following command in terminal by yourself."
 echo ""
-echo "export PATH=~/.rex:\$PATH"
+echo "echo \"export PATH=~/.rex:\$PATH\" >> ~/.bashrc"
 echo "source ~/.bashrc"
 echo ""
 echo "Cleaning temporary files..."
