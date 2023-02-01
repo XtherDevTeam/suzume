@@ -8,9 +8,11 @@
 
 ## Installers for macOS and Linux
 
-- macOS System Requriements: `brew` is installed on the machine.
-- Linux System Requirements: `openssl` is configured.
+- macOS System Requriements: `brew`  and `Developer SDK` are installed on the machine.
+- Linux System Requirements: `openssl` `cmake` `make` `g++ (clang)` is configured.
 
 macOS: `/bin/zsh -c "$(curl -fsSL https://raw.githubusercontent.com/XtherDevTeam/suzume/master/install-scripts/macos.sh)"`
+
+macOS Apple Silicon: `arch -arm64 /bin/zsh -c "$(curl -fsSL https://raw.githubusercontent.com/XtherDevTeam/suzume/master/install-scripts/macos.sh)"`
 
 Linux: `/bin/sh -c "$(curl -fsSL https://raw.githubusercontent.com/XtherDevTeam/suzume/master/install-scripts/linux.sh)"`
