@@ -46,6 +46,8 @@ func rexModInit() {
             let arg = rexArgs[i].split('@');
             pm.remove(arg[0], arg[1]);
         }
+    } else if (rexArgs[0] == "il") {
+        pm.install(rexArgs[1]);
     }
     pm.close();
     return 0;
