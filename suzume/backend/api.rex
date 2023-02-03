@@ -5,6 +5,7 @@ let pmInfo = require(format("${str}/share/info.rex", rexPkgRoot));
 
 func packageManager(args) {
     let result = {
+        globalPM: null,
         suzumeDB: null,     // the sqlite3 database object
         type: null,         // 1 is local, 0 is global
         suzumeInfo: null,   // initialize by the following steps
@@ -90,6 +91,13 @@ func packageManager(args) {
             log.log(log.logLevel.info, format("Installing package ${str}@${str}...", pkgFile.name, pkgFile.version));
             log.log(log.logLevel.info, "Checking dependencies...");
             object.iterate(pkgFile.dependencies, lambda (this) -> (k, v) {
+                // query from globalPM
+                if (type(outer.this.globalPM) != 'null') {
+                    let queryResult = outer.this.globalPM.query(k, v);
+                    if (queryResult == 1) {
+                        return null;
+                    }
+                }
                 let queryResult = outer.this.query(k, v);
                 if (queryResult == 0) {
                     throw {"errName": "suzumeError", "errMsg": format("Unsatisfied package dependencies: required ${str} version ${str}, but an different version have been installed.", k, v)};
@@ -206,6 +214,7 @@ func packageManager(args) {
         result.suzumeDB = std.sqlite.open(format("${str}/suzume.db", args.pkgRoot));
         result.suzumeInfo = args.globalPM.suzumeInfo;   // inherit from globalPM
         result.pmRoot = args.pkgRoot;
+        result.globalPM = args.globalPM;
     } else {
         result.type = 0;
         result.suzumeDB = std.sqlite.open(format("${str}/../../suzume.db", rexPkgRoot));
