@@ -22,23 +22,23 @@ func rexModInit() {
             globalPM: pm,
             pkgRoot: "."
         });
-        pm.open();
+        localPM.open();
         for (let i = 1;i < rexArgs.length();++i) {
             let arg = rexArgs[i].split('@');
             localPM.installFromRemote(arg[0], arg[1]);
         }
-        pm.close();
+        localPM.close();
     } else if (rexArgs[0] == "r") {
         let localPM = api.packageManager({
             globalPM: pm,
             pkgRoot: "."
         });
-        pm.open();
+        localPM.open();
         for (let i = 1;i < rexArgs.length();++i) {
             let arg = rexArgs[i].split('@');
             localPM.remove(arg[0], arg[1]);
         }
-        pm.close();
+        localPM.close();
     } else if (rexArgs[0] == "ig") {
         // throw 114514;
         for (let i = 1;i < rexArgs.length();++i) {
