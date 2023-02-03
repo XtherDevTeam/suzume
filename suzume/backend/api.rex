@@ -109,7 +109,9 @@ func packageManager(args) {
                 return null;
             });
             log.log(log.logLevel.info, "Copying files...");
-            std.fs.copy(pkgPath, format("${str}/modules/${str}@${str}", this.pmRoot, pkgFile.name, pkgFile.version));
+            let destPath = format("${str}/modules/${str}@${str}", this.pmRoot, pkgFile.name, pkgFile.version);
+            std.fs.mkdirs(destPath);
+            std.fs.copy(pkgPath, destPath);
             log.log(log.logLevel.info, "Updating registry...");
             this.updateInstalledPackages(pkgFile.name, pkgFile.version);
             if (this.type == 1) {
@@ -118,7 +120,7 @@ func packageManager(args) {
                 let file = std.json.loads(fp.read(fp.length).decode("utf-8"));
                 fp.close();
                 object.addAttr(file.dependencies, pkgFile.name, pkgFile.version);
-                let fp = std.fs.open(format("${str}/suzume.json", this.pmRoot), "w+");                
+                let fp = std.fs.open(format("${str}/suzume.json", this.pmRoot), "w+");
                 fp.write(std.json.dumps(file).encode("utf-8"));
                 fp.close();
             }
@@ -148,7 +150,7 @@ func packageManager(args) {
                     let file = std.json.loads(fp.read(fp.length).decode("utf-8"));
                     fp.close();
                     object.removeAttr(file.dependencies, pkgFile.name);
-                    let fp = std.fs.open(format("${str}/suzume.json", this.pmRoot), "w+");                
+                    let fp = std.fs.open(format("${str}/suzume.json", this.pmRoot), "w+");
                     fp.write(std.json.dumps(file).encode("utf-8"));
                     fp.close();
                 }
@@ -219,6 +221,7 @@ func packageManager(args) {
         result.type = 0;
         result.suzumeDB = std.sqlite.open(format("${str}/../../suzume.db", rexPkgRoot));
         result.pmRoot = format("${str}/../..", rexPkgRoot);
+        std.fs.mkdirs(format("${str}/modules", rexPkgRoot));
     }
     return result;
 }

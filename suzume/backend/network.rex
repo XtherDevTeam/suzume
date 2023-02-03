@@ -25,7 +25,7 @@ func remote(url) {
             let response = std.net.http.open("GET", remoteUrl, {});
             if (response.headers.statusCode == 200) {
                 let filename = format("${str}-${str}-${str}-${str}.zip", pkgName, pkgVersion, rexPlatform, rexArch);
-                let file = std.fs.open(format("${str}/${str}", dir, filename), "w+");
+                let file = std.fs.open(format("${str}/${str}", dir, filename), "wb+");
                 log.log(log.logLevel.info, format("remote.download(): downloading files with filename ${str}", filename));
                 response.recv(lambda (file) -> (chunk) {
                     outer.file.write(chunk);
